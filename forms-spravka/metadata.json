@@ -1,0 +1,6 @@
+{
+  "name": "Формирование справок-вызовов",
+  "description": "Автоматизированное формирование официальных справок-вызовов для студентов, совмещающих работу с обучением, с экспортом в форматы DOCX и PDF.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

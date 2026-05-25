@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+@layer utilities {
+  /* Scrollbar styles for the control panel */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(243, 244, 246, 0.5);
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(107, 114, 128, 0.7);
+  }
+}
+
+/* Print CSS Styles */
+@media print {
+  /* Reset background and text colors */
+  body {
+    background: white !important;
+    color: black !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Hide everything except print document container */
+  .no-print,
+  .no-print * {
+    display: none !important;
+  }
+
+  header, 
+  footer,
+  aside,
+  nav,
+  button,
+  .control-panel,
+  .history-box,
+  .ai-bubble {
+    display: none !important;
+  }
+
+  /* Expand print canvas to full printable width/page */
+  .print-container {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  .print-sheet {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0.5cm 1cm !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    page-break-after: avoid;
+    font-size: 11pt !important;
+  }
+
+  /* Keep official styling perfect in grayscale standard */
+  .print-seal,
+  .print-sig {
+    filter: none !important;
+    opacity: 0.85 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 1.5cm;
+  }
+}
