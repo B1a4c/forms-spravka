@@ -1,0 +1,6 @@
+# For development Dockerfile if needed
+node_modules
+dist
+dist-electron
+.git
+.gitignore

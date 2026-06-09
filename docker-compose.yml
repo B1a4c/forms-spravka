@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+    # Uncomment for development with watch mode:
+    # command: npm run dev
+    # volumes:
+    #   - ./forms-spravka/src:/app/src
+    #   - ./forms-spravka/index.html:/app/index.html
