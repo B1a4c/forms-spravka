@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import LoginModal from "./components/LoginModal";
+import RegisterModal from "./components/RegisterModal";
 import { 
   FileText, 
   Download, 
@@ -17,16 +19,40 @@ import {
   Info
 } from "lucide-react";
 import { ReferenceCallData, SavedReference, StudyForm, LeaveType, EducationLevel } from "./types";
-import { PRESETS, STUDY_FORMS, LEAVE_TYPES, EDUCATION_LEVELS } from "./constants";
+import { STUDY_FORMS, LEAVE_TYPES, EDUCATION_LEVELS } from "./constants";
 import { calculateDays, formatRussianDate } from "./utils/textUtils";
 import { DocumentPreview } from "./components/DocumentPreview";
 import { HistoryList } from "./components/HistoryList";
 import { generateDocx } from "./utils/docxGenerator";
 
 export default function App() {
-  // Load initial preset (Defaults to Khabarovsk Institute of Infocommunications)
-  const [formData, setFormData] = useState<ReferenceCallData>(PRESETS.hiik);
-  const [selectedPreset, setSelectedPreset] = useState<string>("hiik");
+  // Start with empty form (no initial prefill)
+  const emptyForm: ReferenceCallData = {
+    studentName: "",
+    course: "",
+    groupName: "",
+    studyForm: "заочная",
+    employerName: "",
+    universityName: "",
+    universityFullTitle: "",
+    accreditationInfo: "",
+    educationProgram: "",
+    educationLevel: "Бакалавриат",
+    startDate: "",
+    endDate: "",
+    leaveType: "аттестация",
+    referenceNumber: "",
+    issueDate: "",
+    signatoryTitle: "",
+    signatoryName: "",
+    includeConfirmation: false,
+    hasSeal: false,
+    hasSignature: false,
+    confirmationStartDate: "",
+    confirmationEndDate: ""
+  };
+
+  const [formData, setFormData] = useState<ReferenceCallData>(emptyForm);
   
   // History states
   const [savedReferences, setSavedReferences] = useState<SavedReference[]>([]);
@@ -38,8 +64,57 @@ export default function App() {
     signature: false,
   });
 
+  // Authentication state (simple frontend-based)
+  const [user, setUser] = useState<{ username: string } | null>(null);
+  const [showRegister, setShowRegister] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("spravka_user");
+      if (stored) setUser(JSON.parse(stored));
+    } catch (e) {
+      console.error("Failed to load auth user:", e);
+    }
+  }, []);
+
+  const handleLogin = (username: string) => {
+    const u = { username };
+    setUser(u);
+    try {
+      localStorage.setItem("spravka_user", JSON.stringify(u));
+    } catch (e) {
+      console.error("Failed to store auth user:", e);
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    try {
+      localStorage.removeItem("spravka_user");
+    } catch (e) {
+      console.error("Failed to remove auth user:", e);
+    }
+  };
+
+  const handleShowRegister = () => setShowRegister(true);
+
+  const handleRegister = (username: string) => {
+    // После успешной регистрации автоматически логиним
+    handleLogin(username);
+    setShowRegister(false);
+  };
+
   // Calculate day difference dynamically
   const computedDays = calculateDays(formData.startDate, formData.endDate);
+
+  // Which sections to include in the generated справка
+  const [includedSections, setIncludedSections] = useState({
+    uni: true,
+    student: true,
+    leave: true,
+    signature: true,
+    confirmation: false
+  });
 
   // Load drafts from localStorage on start
   useEffect(() => {
@@ -76,16 +151,9 @@ export default function App() {
     }
 
     setFormData(updated);
-    setSelectedPreset("custom"); // Mark as custom if modified
   };
 
-  // Apply predefined preset
-  const handlePresetChange = (presetKey: string) => {
-    if (PRESETS[presetKey]) {
-      setFormData(PRESETS[presetKey]);
-      setSelectedPreset(presetKey);
-    }
-  };
+  // No presets available — user composes form manually
 
   // Save current reference to local drafts
   const handleSaveDraft = () => {
@@ -105,7 +173,6 @@ export default function App() {
   // Load a draft from history
   const handleLoadDraft = (draft: SavedReference) => {
     setFormData(draft.data);
-    setSelectedPreset("custom");
   };
 
   // Delete draft from history
@@ -116,8 +183,7 @@ export default function App() {
 
   // Clear or reset form completely
   const handleResetForm = () => {
-    setFormData(PRESETS.custom);
-    setSelectedPreset("custom");
+    setFormData(emptyForm);
   };
 
   // Export to direct DOCX file stream
@@ -156,6 +222,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans antialiased">
+      <LoginModal open={!user} onLogin={handleLogin} onShowRegister={handleShowRegister} />
+      <RegisterModal open={showRegister} onRegister={handleRegister} onClose={() => setShowRegister(false)} />
       
       {/* Visual Header */}
       <header className="no-print bg-white border-b border-slate-200/80 sticky top-0 z-50 px-4 sm:px-6 lg:px-8 py-3.5 shadow-sm">
@@ -175,24 +243,32 @@ export default function App() {
           </div>
           
           <div className="flex items-center gap-4 sm:gap-6">
-            <div className="hidden sm:flex">
-              <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] font-bold uppercase tracking-wider border border-blue-100">
-                Профиль: Студент
-              </span>
+            <div className="hidden sm:flex items-center gap-2">
+              {user ? (
+                <>
+                  <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] font-bold uppercase tracking-wider border border-blue-100">
+                    Профиль: {user.username}
+                  </span>
+                  <button onClick={handleLogout} className="text-xs text-red-500 font-bold hover:text-red-650 active:scale-95 transition-all">Выход</button>
+                </>
+              ) : (
+                <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-[10px] font-bold uppercase tracking-wider border border-blue-100">Гость</span>
+              )}
             </div>
             
-            {/* Quick Preset Selector */}
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-slate-400" />
-              <select
-                value={selectedPreset}
-                onChange={(e) => handlePresetChange(e.target.value)}
-                className="bg-slate-50 border border-slate-200/80 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="hiik">ХИИК СибГУТИ (Хабаровск)</option>
-                <option value="custom">Новый шаблон (ручной ввод)</option>
-              </select>
+            {/* Constructor toggles */}
+            <div className="hidden sm:flex items-center gap-2">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs">Конструктор бланка</div>
+              <div className="flex items-center gap-2 text-xs">
+                <label className="flex items-center gap-1"><input type="checkbox" checked={includedSections.uni} onChange={(e)=>setIncludedSections(prev=>({...prev, uni: e.target.checked}))}/>Организация</label>
+                <label className="flex items-center gap-1"><input type="checkbox" checked={includedSections.student} onChange={(e)=>setIncludedSections(prev=>({...prev, student: e.target.checked}))}/>Студент</label>
+                <label className="flex items-center gap-1"><input type="checkbox" checked={includedSections.leave} onChange={(e)=>setIncludedSections(prev=>({...prev, leave: e.target.checked}))}/>Период</label>
+                <label className="flex items-center gap-1"><input type="checkbox" checked={includedSections.signature} onChange={(e)=>setIncludedSections(prev=>({...prev, signature: e.target.checked}))}/>Реквизиты</label>
+                <label className="flex items-center gap-1"><input type="checkbox" checked={includedSections.confirmation} onChange={(e)=>{setIncludedSections(prev=>({...prev, confirmation: e.target.checked})); updateField('includeConfirmation', e.target.checked);}}/>Подтверждение</label>
+              </div>
             </div>
+            
+            
           </div>
         </div>
       </header>
@@ -736,7 +812,7 @@ export default function App() {
 
           {/* Realistic Graphic sheet rendering in clean bright slate backdrop */}
           <div className="w-full flex justify-center p-3 sm:p-5 bg-slate-200 border border-slate-300/70 rounded-xl overflow-x-auto custom-scrollbar shadow-inner select-text">
-            <DocumentPreview data={formData} />
+            <DocumentPreview data={formData} includes={includedSections} />
           </div>
 
         </section>

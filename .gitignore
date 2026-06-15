@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+*/node_modules/
+package-lock.json
+
+# Build outputs
+dist/
+dist-electron/
+*.cjs.map
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+.cache/
+*.tmp
