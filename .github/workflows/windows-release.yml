@@ -24,9 +24,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install --no-audit --prefer-offline
+        working-directory: forms-spravka
 
       - name: Build Windows artifacts
         run: npx electron-builder --win --x64 --publish never
+        working-directory: forms-spravka
 
       - name: Upload artifacts to existing release
         env:
@@ -39,4 +41,5 @@ jobs:
             TAG="${GITHUB_REF#refs/tags/}"
           fi
           echo "Uploading artifacts for tag $TAG"
-          gh release upload "$TAG" dist-electron/* --clobber
+          gh release upload "$TAG" forms-spravka/dist-electron/* --clobber
+        working-directory: .
