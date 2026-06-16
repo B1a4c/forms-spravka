@@ -1,0 +1,35 @@
+name: Build and upload Windows release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows artifacts
+        run: npx electron-builder --win --x64 --publish never
+
+      - name: Upload artifacts to existing release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG=${{ github.event.inputs.tag }}
+          echo "Uploading artifacts for tag $TAG"
+          gh release upload "$TAG" dist-electron/* --clobber
