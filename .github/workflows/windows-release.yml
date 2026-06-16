@@ -5,8 +5,11 @@ on:
     inputs:
       tag:
         description: 'Release tag'
-        required: true
-        default: 'v1.0.0'
+        required: false
+        default: ''
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   build-windows:
@@ -29,7 +32,12 @@ jobs:
       - name: Upload artifacts to existing release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REF: ${{ github.ref }}
         run: |
-          TAG=${{ github.event.inputs.tag }}
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.tag }}" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
           echo "Uploading artifacts for tag $TAG"
           gh release upload "$TAG" dist-electron/* --clobber
