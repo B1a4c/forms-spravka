@@ -43,3 +43,4 @@ jobs:
           echo "Uploading artifacts for tag $TAG"
           gh release upload "$TAG" forms-spravka/dist-electron/* --clobber
         working-directory: .
+        shell: bash
